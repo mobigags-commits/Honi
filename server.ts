@@ -1,6 +1,5 @@
 import express, { Request, Response } from 'express';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import {
@@ -23,8 +22,7 @@ import {
   CommunityPost
 } from './src/types.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const serverDirname = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
 
 // In-Memory Global State Store
 let currentUser: User = { ...INITIAL_USER };
