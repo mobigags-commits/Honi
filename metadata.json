@@ -1,0 +1,6 @@
+{
+  "name": "AVERIQ Global Platform",
+  "description": "Global financial & web3 ecosystem featuring AVQ token, rewards, trading, swap, community, AI, and cash-out infrastructure.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
