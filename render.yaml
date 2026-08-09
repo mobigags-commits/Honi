@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: averiq-production
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: EASYPAISA_MERCHANT_ID
+        sync: false
+      - key: EASYPAISA_STORE_ID
+        sync: false
+      - key: EASYPAISA_HASH_KEY
+        sync: false
+      - key: AVQ_CHAIN_RPC_URL
+        value: https://rpc.ankr.com/eth
+      - key: AVQ_SMART_CONTRACT_ADDRESS
+        value: 0x71a2B81F943C3A29B0D9802422e1a3848bA95a7C

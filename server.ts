@@ -138,7 +138,7 @@ function getGeminiClient(): GoogleGenAI | null {
         apiKey,
         httpOptions: {
           headers: {
-            'User-Agent': 'aistudio-build',
+            'User-Agent': 'averiq-app',
           },
         },
       });
@@ -149,9 +149,25 @@ function getGeminiClient(): GoogleGenAI | null {
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
+
+  // Enable CORS & Json parsing for public production access
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    next();
+  });
 
   app.use(express.json());
+
+  // Health check endpoint for Cloud Run / load balancers
+  app.get('/api/health', (_req: Request, res: Response) => {
+    res.json({ status: 'ok', service: 'AVERIQ Ecosystem Server', timestamp: new Date().toISOString() });
+  });
 
   // Maintenance & Emergency Guard Middleware
   app.use('/api', (req, res, next) => {
@@ -668,17 +684,29 @@ async function startServer() {
   });
 
   // --- VITE MIDDLEWARE / PRODUCTION STATIC SERVING ---
-  if (process.env.NODE_ENV !== 'production') {
+  const fs = await import('fs');
+  const distPath = path.join(process.cwd(), 'dist');
+  const distIndex = path.join(distPath, 'index.html');
+
+  if (process.env.NODE_ENV === 'production' && fs.existsSync(distIndex)) {
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: 'API route not found' });
+      }
+      res.sendFile(distIndex);
+    });
+  } else {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: 'API route not found' });
+      }
+      next();
     });
   }
 
